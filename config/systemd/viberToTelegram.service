@@ -1,0 +1,12 @@
+[Unit]
+Description=viberToTelegram app
+
+[Service]
+User=server
+Type=simple
+SuccessExitStatus=0 1
+WorkingDirectory=/var/www/viberToTelegram/
+ExecStart=/var/www/viberToTelegram/venv/bin/python main.py
+
+[Install]
+WantedBy=multi-user.target
