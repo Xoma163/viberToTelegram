@@ -65,8 +65,6 @@ def viber():
 
     if isinstance(viber_request, ViberMessageRequest):
         if not viber_request.sender.id == os.getenv('USER1_VIBER_ID'):
-            # ToDo: remove
-            print(viber_request.sender.id)
             return Response(status=200)
         message = viber_request.message
 
