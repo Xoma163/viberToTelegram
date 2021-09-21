@@ -5,8 +5,8 @@ Description=viberToTelegram app
 User=server
 Type=simple
 SuccessExitStatus=0 1
-WorkingDirectory=/var/www/viberToTelegram/
-ExecStart=/var/www/viberToTelegram/venv/bin/python main.py
+WorkingDirectory=/var/www/andrewsha/viberToTelegram/
+ExecStart=/var/www/andrewsha/viberToTelegram/venv/bin/python main.py
 
 [Install]
 WantedBy=multi-user.target

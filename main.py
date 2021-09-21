@@ -33,27 +33,30 @@ def telegram(message):
     """
     https://developers.viber.com/docs/api/python-bot-api/
     """
-    if not str(message.from_user.id) == os.getenv('USER2_TELEGRAM_ID'):
-        return
-    if message.document:
-        file_id = message.document.file_id
-        file = tg_bot.get_file(file_id)
-        file_url = f"https://api.telegram.org/file/bot{os.getenv('TELEGRAM_TOKEN')}/{file.file_path}"
-        text = message.caption
-        viber_message = TextMessage(text=text)
+    try:
+        if not str(message.from_user.id) == os.getenv('USER2_TELEGRAM_ID'):
+            return
+        if message.document:
+            file_id = message.document.file_id
+            file = tg_bot.get_file(file_id)
+            file_url = f"https://api.telegram.org/file/bot{os.getenv('TELEGRAM_TOKEN')}/{file.file_path}"
+            text = message.caption
+            viber_message = TextMessage(text=text)
+            viber_bot.send_messages(os.getenv('USER1_VIBER_ID'), viber_message)
+            viber_message = FileMessage(media=file_url, size=message.document.file_size,
+                                        file_name=message.document.file_name)
+        elif message.photo:
+            file_id = message.photo[-1].file_id
+            file = tg_bot.get_file(file_id)
+            photo_url = f"https://api.telegram.org/file/bot{os.getenv('TELEGRAM_TOKEN')}/{file.file_path}"
+            text = message.caption
+            viber_message = PictureMessage(media=photo_url, text=text)
+        else:
+            text = message.text
+            viber_message = TextMessage(text=text)
         viber_bot.send_messages(os.getenv('USER1_VIBER_ID'), viber_message)
-        viber_message = FileMessage(media=file_url, size=message.document.file_size,
-                                    file_name=message.document.file_name)
-    elif message.photo:
-        file_id = message.photo[-1].file_id
-        file = tg_bot.get_file(file_id)
-        photo_url = f"https://api.telegram.org/file/bot{os.getenv('TELEGRAM_TOKEN')}/{file.file_path}"
-        text = message.caption
-        viber_message = PictureMessage(media=photo_url, text=text)
-    else:
-        text = message.text
-        viber_message = TextMessage(text=text)
-    viber_bot.send_messages(os.getenv('USER1_VIBER_ID'), viber_message)
+    except Exception as e:
+        print(e)
 
 
 @app.route('/', methods=['POST'])
