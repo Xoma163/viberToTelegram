@@ -7,7 +7,7 @@ import telebot
 from dotenv import load_dotenv
 from flask import Flask, request, Response
 from viberbot import BotConfiguration, Api
-from viberbot.api.messages import TextMessage, PictureMessage, FileMessage
+from viberbot.api.messages import TextMessage, PictureMessage, FileMessage, VideoMessage
 from viberbot.api.viber_requests import ViberMessageRequest
 
 load_dotenv()
@@ -16,7 +16,7 @@ tg_bot = telebot.TeleBot(os.getenv("TELEGRAM_TOKEN"))
 
 viber_bot = Api(BotConfiguration(
     name=os.getenv('USER2_VIBER_NAME'),
-    avatar=os.getenv('USER2_VIBER_AVATAR_URL'),
+    avatar=None,
     auth_token=os.getenv("VIBER_TOKEN")
 ))
 app = Flask(__name__)
@@ -28,7 +28,7 @@ if __name__ == "__main__":
                      kwargs={'none_stop': True, 'interval': 0, 'timeout': 86400}).start()
 
 
-@tg_bot.message_handler(content_types=['text', 'photo', 'document'])
+@tg_bot.message_handler(content_types=['text', 'photo', 'document', 'sticker'])
 def telegram(message):
     """
     https://developers.viber.com/docs/api/python-bot-api/
@@ -51,6 +51,14 @@ def telegram(message):
             photo_url = f"https://api.telegram.org/file/bot{os.getenv('TELEGRAM_TOKEN')}/{file.file_path}"
             text = message.caption
             viber_message = PictureMessage(media=photo_url, text=text)
+        elif message.sticker:
+            file_id = message.sticker.file_id
+            file = tg_bot.get_file(file_id)
+            file_url = f"https://api.telegram.org/file/bot{os.getenv('TELEGRAM_TOKEN')}/{file.file_path}"
+            if message.sticker.is_animated or message.sticker.is_video:
+                return
+            else:
+                viber_message = PictureMessage(media=file_url)
         else:
             text = message.text
             viber_message = TextMessage(text=text)
@@ -68,6 +76,7 @@ def viber():
 
     if isinstance(viber_request, ViberMessageRequest):
         if not viber_request.sender.id == os.getenv('USER1_VIBER_ID'):
+            print(f"Unknown id: {viber_request.sender.id}")
             return Response(status=200)
         message = viber_request.message
 
@@ -86,5 +95,12 @@ def viber():
             tmp.name = message.file_name
             tmp.seek(0)
             tg_bot.send_document(os.getenv("USER2_TELEGRAM_ID"), tmp)
+        elif isinstance(message, VideoMessage):
+            video_url = message.media
+            content = requests.get(video_url).content
+            tmp = NamedTemporaryFile()
+            tmp.write(content)
+            tmp.seek(0)
+            tg_bot.send_video(os.getenv("USER2_TELEGRAM_ID"), tmp)
 
     return Response(status=200)
